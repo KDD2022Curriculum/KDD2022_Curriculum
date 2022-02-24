@@ -66,27 +66,3 @@ def calculate_random_walk_matrix(adj_mx):
     return random_walk_mx.toarray()
 
 
-def spatial_difficulty(model,ADJPATH,ks)
-    model.eval()
-    A = torch.tensor(pd.read_csv(ADJPATH).values).to(device)
-    YS_spatial = dict((i,[]) for i in range(A.shape[0]))
-    A_q = calculate_random_walk_matrix(A).T.float()
-    A_h = calculate_random_walk_matrix(A.T).T.float()
-    edge_index=torch.vstack(torch.where(A!=0)).cpu()
-    g1 = dgl.graph((edge_index[0],edge_index[1]))
-
-    with torch.no_grad():
-        for i in tqdm(range(A.shape[0])):
-            node_idx, sub_edges_index, _, _ = k_hop_subgraph(i,ks,edge_index)
-            retain_index=torch.tensor(list(set(node_idx.tolist())-{i}))
-            missing_A=torch.zeros_like(A).float()
-            missing_A[sub_edges_index[0],sub_edges_index[1]]=1
-            for x, y, idx in train_iter:
-                missing_index=torch.zeros_like(x)
-                if retain_index.shape[0]!=0:
-                    missing_index[:,:,retain_index]=1
-                YS_batch = model(x*missing_index,A_q*missing_A,A_h*missing_A)
-                YS_batch = YS_batch.cpu().numpy()
-                YS_spatial[i].append(YS_batch[:,:,i:i+1])
-            YS_spatial[i] = np.vstack(YS_spatial[i])
-    return YS_spatial[i]
